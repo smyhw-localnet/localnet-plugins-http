@@ -1,5 +1,6 @@
 package online.smyhw.localnet.plugins.http.mods;
 
+import online.smyhw.localnet.helper;
 import online.smyhw.localnet.plugins.http.session_manager;
 
 import java.util.HashMap;
@@ -21,20 +22,20 @@ public class verification{
             return re;
         }
 
-        if(session_manager.get_session(String.valueOf(args.get("id"))) == null && online.smyhw.localnet.LNlib.Find_Client(String.valueOf(args.get("id"))) != null){
+        if(session_manager.get_session(String.valueOf(args.get("id"))) == null && helper.Find_Client(String.valueOf(args.get("id"))) != null){
             Map<String,String> re = new HashMap<String,String>();
             re.put("error","2");
             re.put("msg","该ID已被占用");
             return re;
         }
-        if(session_manager.get_session(String.valueOf(args.get("id"))) == null && online.smyhw.localnet.LNlib.Find_Client(String.valueOf(args.get("id"))) == null){
+        if(session_manager.get_session(String.valueOf(args.get("id"))) == null && helper.Find_Client(String.valueOf(args.get("id"))) == null){
             new session_manager(String.valueOf(args.get("id")));
             Map<String,String> re = new HashMap<String,String>();
             re.put("error","0");
             re.put("msg","创建新客户端实例");
             return re;
         }
-        if(session_manager.get_session(String.valueOf(args.get("id"))) != null && online.smyhw.localnet.LNlib.Find_Client(String.valueOf(args.get("id"))) != null){
+        if(session_manager.get_session(String.valueOf(args.get("id"))) != null && helper.Find_Client(String.valueOf(args.get("id"))) != null){
             Map<String,String> re = new HashMap<String,String>();
             re.put("error","0");
             re.put("msg","客户端实例已存在,但可以操作");

@@ -5,17 +5,23 @@ import com.sun.net.httpserver.HttpHandler;
 import online.smyhw.localnet.message;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import online.smyhw.localnet.lib.Json;
+import online.smyhw.localnet.plugins.http.mods.info;
+import online.smyhw.localnet.plugins.http.mods.receive_msg;
+import online.smyhw.localnet.plugins.http.mods.send_msg;
+import online.smyhw.localnet.plugins.http.mods.verification;
 
 public class re_handler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) {
         Map<String,Object> args = new ConcurrentHashMap<String,Object>();
-        Map re1 = get_map_from_url(exchange.getRequestURI().getQuery());
+        Map re1 = get_map_from_url(exchange.getRequestURI().getRawQuery());
+
         if(re1 != null){args.putAll(re1);}
         if(exchange.getProtocol().equals("POST")){
             String request_data = "";
@@ -28,20 +34,20 @@ public class re_handler implements HttpHandler {
                 send_response(exchange,400,"{error:4,msg:\"读取请求异常\"}",null);
             }
         }
-        message.info("[localnetHTTP]:API:"+exchange.getRequestURI().getPath().substring(1));
+//        message.info("[localnetHTTP]:API:"+exchange.getRequestURI().getPath().substring(1));
         Map re;
         switch(exchange.getRequestURI().getPath().substring(1)){
             case"verification":
-                re = online.smyhw.localnet.plugins.http.mods.verification.handle_request(args);
+                re = verification.handle_request(args);
                 break;
             case"info":
-                re = online.smyhw.localnet.plugins.http.mods.info.handle_request(args);
+                re = info.handle_request(args);
                 break;
             case"receive_msg":
-                re = online.smyhw.localnet.plugins.http.mods.receive_msg.handle_request(args);
+                re = receive_msg.handle_request(args);
                 break;
             case"send_msg":
-                re = online.smyhw.localnet.plugins.http.mods.send_msg.handle_request(args);
+                re = send_msg.handle_request(args);
                 break;
             default:
                 message.warning("[localnetHTTP]:未知接口...");
@@ -59,7 +65,7 @@ public class re_handler implements HttpHandler {
         String[] tmp1 = url.split("&");
         for(int i = 0; i < tmp1.length ; i++){
             String[] tmp3 = tmp1[i].split("=");
-            re.put(tmp3[0],tmp3[1]);
+            try {re.put(java.net.URLDecoder.decode(tmp3[0],"utf-8"),java.net.URLDecoder.decode(tmp3[1],"utf-8"));} catch (UnsupportedEncodingException e) {message.warning("[localnetHTTP]:URL参数解码出错<"+url+">",e);return null;}
         }
         return re;
     }

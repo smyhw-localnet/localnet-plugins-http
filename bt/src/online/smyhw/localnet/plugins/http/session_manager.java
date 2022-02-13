@@ -18,7 +18,7 @@ public class session_manager {
     public session_manager(String id){
         List tmp1 = new ArrayList();
         localnetClient = new Client_sl("online.smyhw.localnet.plugins.http.protocol", tmp1);
-        try {localnetClient.CLmsg(new DataPack("{\"type\":\"auth\",\"ID\":\""+id+"\"}"));} catch (Json_Parse_Exception e) {e.printStackTrace();}//这不该出现异常
+        try {localnetClient.on_recv(new DataPack("{\"type\":\"auth\",\"ID\":\""+id+"\"}"));} catch (Json_Parse_Exception e) {e.printStackTrace();}//这不该出现异常
         session_map.put(id,this);
     }
 

@@ -27,7 +27,7 @@ public class send_msg {
         //return
         Map<String,String> re = new HashMap<String,String>();
         re.put("error","0");
-        re.put("msg","向loaclnet发送消息<"+String.valueOf(args.get("msg"))+">");
+        re.put("msg","向loaclnet发送消息<"+String.valueOf(args.get("msg")).replaceAll("\n","\\n")+">");
         return re;
     }
 }

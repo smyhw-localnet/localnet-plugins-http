@@ -14,10 +14,10 @@ import online.smyhw.localnet.network.protocol.StandardProtocol;
  * localnet虚拟协议,负责沟通localnet
  */
 public class protocol implements StandardProtocol {
-    Client_sl upClient;
-    public protocol(List input,Client_sl sy)
+    Client_sl client;
+    public protocol(List input,Client_sl client)
     {
-        this.upClient = sy;
+        this.client = client;
     }
 
     /**
@@ -28,8 +28,8 @@ public class protocol implements StandardProtocol {
     public void SendData(DataPack data) {
         if(data.getValue("type").equals("message"))
         {
-            String msg = "<"+LN.ID+">:"+data.getValue("message");
-            session_manager session = session_manager.get_session(this.upClient.remoteID);
+            String msg = data.getValue("message");
+            session_manager session = session_manager.get_session(this.client.remoteID);
             //如果返回null代表session已经被销毁...
             //这里不存在session给定的ID不是本插件创建的虚拟客户端的问题,因为那样的话根本不会创建这个实例
             if(session == null)
@@ -41,10 +41,10 @@ public class protocol implements StandardProtocol {
             session.add_recv_msg(msg);
             return;
         }
-        if(data.getValue("type").equals("forward_message"))
+        if(data.getValue("type").equals("message"))
         {
-            String msg = "<"+data.getValue("From")+">:"+data.getValue("message");
-            session_manager session = session_manager.get_session(this.upClient.remoteID);
+            String msg = data.getValue("message");
+            session_manager session = session_manager.get_session(this.client.remoteID);
             //如果返回null代表session已经被销毁...
             //这里不存在session给定的ID不是本插件创建的虚拟客户端的问题,因为那样的话根本不会创建这个实例
             if(session == null)
@@ -77,7 +77,7 @@ public class protocol implements StandardProtocol {
             message.warning("[localnetHTTP]:向localnet发送消息出错<"+msg+">", e);
             return false;
         }
-        this.upClient.CLmsg(dp);
+        this.client.on_recv(dp);
         return true;
     }
 
@@ -96,14 +96,14 @@ public class protocol implements StandardProtocol {
             message.warning("[localnetHTTP]:向localnet发送JSON消息出错<"+msg+">", e);
             return false;
         }
-        this.upClient.CLmsg(dp);
+        this.client.on_recv(dp);
         return true;
     }
 
 
     @Override
     public void Disconnect() {
-        message.warning("[localnetHTTP]:虚拟客户端被localnet要求断开连接");
+        message.warning("[localnetHTTP]:虚拟客户端<"+this.client.remoteID+">被localnet要求断开连接");
     }
 
 }
