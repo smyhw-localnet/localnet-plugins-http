@@ -1,0 +1,93 @@
+package online.smyhw.localnet.plugins.http;
+
+import online.smyhw.localnet.data.DataPack;
+import online.smyhw.localnet.lib.Exception.Json_Parse_Exception;
+import online.smyhw.localnet.lib.Json;
+import online.smyhw.localnet.message;
+import online.smyhw.localnet.network.Client_sl;
+import online.smyhw.localnet.network.protocol.StandardProtocol;
+
+import java.util.List;
+
+/**
+ * localnet虚拟协议,负责沟通localnet
+ */
+public class protocol implements StandardProtocol {
+    Client_sl client;
+
+    public protocol(List input, Client_sl client) {
+        this.client = client;
+    }
+
+    /**
+     * 这是从localnet获取消息的方法,发送给WebAPI<br/>
+     * 客户端从localnet获得消息后，localnet会调用该方法
+     */
+    @Override
+    public void SendData(DataPack data) {
+        //不考虑登入包
+        if (data.getValue("type").equals("auth")) {
+            return;
+        }
+        session_manager session = session_manager.get_session(this.client.remoteID);
+        //如果返回null代表session已经被销毁...
+        //这里不存在session给定的ID不是本插件创建的虚拟客户端的问题,因为那样的话根本不会创建这个实例
+        if (session == null) {
+            message.warning("[localnetHTTP][协议]:session[" + session.localnetClient.remoteID + "]不存在或已被销毁");
+            return;
+        }
+        //正常消息
+        if (data.getValue("type").equals("message")) {
+            String msg = data.getValue("message");
+            //向WebAPI递交消息
+            session.add_recv_msg(msg, data.getStr());
+            return;
+        }
+        session.add_recv_msg(null, data.getStr());
+        return;
+
+    }
+
+    /**
+     * 从WebAPI接收消息并发送给localnet
+     *
+     * @param msg 要发送的消息
+     * @return 是否发送成功(目前始终返回true)
+     */
+    public boolean SendTo_localnet(String msg) {
+        DataPack dp;
+        try {
+            msg = Json.Encoded(msg);
+            dp = new DataPack("{\"type\":\"message\",\"message\":\"" + msg + "\"}");
+        } catch (Json_Parse_Exception e) {
+            message.warning("[localnetHTTP]:向localnet发送消息出错<" + msg + ">", e);
+            return false;
+        }
+        this.client.on_recv(dp);
+        return true;
+    }
+
+    /**
+     * 这会直接向localnet发送原始JSON，请检查源码以确保正确
+     *
+     * @param msg
+     * @return
+     */
+    public boolean RAW_SendTo_localnet(String msg) {
+        DataPack dp;
+        try {
+            dp = new DataPack(msg);
+        } catch (Json_Parse_Exception e) {
+            message.warning("[localnetHTTP]:向localnet发送JSON消息出错<" + msg + ">", e);
+            return false;
+        }
+        this.client.on_recv(dp);
+        return true;
+    }
+
+
+    @Override
+    public void Disconnect() {
+        message.warning("[localnetHTTP]:虚拟客户端<" + this.client.remoteID + ">被localnet要求断开连接");
+    }
+}
